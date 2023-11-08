@@ -11,3 +11,10 @@ var averageResultolini = degreeDistributionCalculator.CalculateAverageDegrees(re
 Console.WriteLine($"{(degreeDistributionCalculator.IsClosedNetwork(resultolini)?"Closed":"Open")}");
 Console.WriteLine($"Avg indegree dist: {averageResultolini.averageInDegree}, avg outdegree dist: {averageResultolini.averageOutDegree}");
 Console.WriteLine($"Indegree distribution of Adi: {resultolini[Adolf].Item1}, outdegree distribution of Adi: {resultolini[Adolf].Item2}");
+
+var calculator = new ClusteringCoefficientCalculator(network);
+var coefficients = calculator.CalculateClusteringCoefficients();
+var averageCoefficient = calculator.CalculateAverageClusteringCoefficient(coefficients);
+
+Console.WriteLine($"Average Clustering Coefficient: {averageCoefficient}");
+Console.WriteLine($"Clustering coefficient of Hitler: {coefficients[Adolf]}");
