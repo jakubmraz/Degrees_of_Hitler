@@ -1,10 +1,4 @@
-﻿using System;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 
 public class ClusteringCoefficientCalculator
 {
@@ -40,18 +34,36 @@ public class ClusteringCoefficientCalculator
         {
             HashSet<int> successors = _successors.ContainsKey(node) ? _successors[node] : new HashSet<int>();
             HashSet<int> predecessors = _predecessors.ContainsKey(node) ? _predecessors[node] : new HashSet<int>();
-
-            int triangles = 0;
-            int triplets = successors.Count * predecessors.Count;
-
-            foreach (var succ in successors)
+            HashSet<int> neighbors = new HashSet<int>(successors);
+            foreach (var pred in predecessors)
             {
-                if (_predecessors.ContainsKey(succ))
+                // Add predecessors to neighbors if it's not a successor to avoid counting twice for undirected edges
+                if (!successors.Contains(pred))
                 {
-                    triangles += predecessors.Intersect(_predecessors[succ]).Count();
+                    neighbors.Add(pred);
                 }
             }
 
+            int triangles = 0;
+            int triplets = 0;
+
+            foreach (var succ in successors)
+            {
+                foreach (var pred in predecessors)
+                {
+                    // For each pair of successor and predecessor, check if there is a directed edge forming a triangle
+                    if (_successors.ContainsKey(pred) && _successors[pred].Contains(succ))
+                    {
+                        triangles++; // This is a directed triangle
+                    }
+                    if (pred != succ) // Make sure we don't count the node itself as a triplet
+                    {
+                        triplets++; // This is a potential triplet (open triplet)
+                    }
+                }
+            }
+
+            // Each triangle is counted once for each direction in the method, so we don't divide by 3 here.
             double clusteringCoefficient = triplets == 0 ? 0 : (double)triangles / triplets;
             clusteringCoefficients[node] = clusteringCoefficient;
 
@@ -64,6 +76,7 @@ public class ClusteringCoefficientCalculator
 
         return clusteringCoefficients;
     }
+
 
     public double CalculateAverageClusteringCoefficient(ConcurrentDictionary<int, double> clusteringCoefficients)
     {
