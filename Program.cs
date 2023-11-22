@@ -26,8 +26,8 @@ var network = EdgeListReader.ConvertEdgeListToAdjacencyListParallel(networkAsEdg
 //To clear up memory
 networkAsEdgeList = null;
 
-var dijkstra = new DijkstraService();
-Console.WriteLine("Dijkstra moment...");
-var avgShortestPath = dijkstra.CalculateAverageShortestPathLengthParallel(network, Adolf);
+var bfsService = new BFSService();
+Console.WriteLine("BFS time...");
+var avgShortestPath = bfsService.CalculateAverageShortestPathLengthParallel(network, Adolf);
 
 Console.WriteLine($"The average shortest path length to Adolf is: {avgShortestPath}");
