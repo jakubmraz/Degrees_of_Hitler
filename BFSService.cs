@@ -1,19 +1,65 @@
-﻿namespace Degrees_of_Hitler
+﻿using System.Collections.Concurrent;
+using System.Security.Cryptography.X509Certificates;
+
+namespace Degrees_of_Hitler
 {
     public class BFSService
     {
+        private const string filePath = @"ShortestPaths.txt";
+        private int numberOfNodes;
+        private volatile bool stopRequested = false;
+        private volatile bool stopping = false;
+
+        private void SaveProgress(int[] totalPathLengths)
+        {
+            var fileService = new FileService();
+            fileService.SaveIntArrayToFile(totalPathLengths, filePath);
+        }
+
+        private int[] LoadProgress(string filePath)
+        {
+            var fileService = new FileService();
+            return fileService.ReadIntArrayFromFile(filePath, numberOfNodes);
+        }
+
+        private int[] Initialize()
+        {
+            Console.WriteLine("Welcome back. It's me, chatGPT. Would you like to continue from where you left off? (y/n):");
+            string response = Console.ReadLine();
+            
+            if(response.ToLower() == "y")
+            {
+                Console.WriteLine("Understood. Please provide the path to the file where your shortest paths to Herr Hitler are:");
+                string path = Console.ReadLine();
+                Console.WriteLine("(/) Reading file...");
+                return LoadProgress(path);
+            }
+
+            Console.WriteLine("Understood. Let's start from the beginning. This will take a while.");
+            return null;
+        }
+
         public double CalculateAverageShortestPathLengthParallel(List<List<int>> adjacencyList, int targetNode)
         {
-            int numberOfNodes = adjacencyList.Count;
-            double[] totalPathLengths = new double[numberOfNodes];
+            Thread listenerThread = new Thread(ListenForStopCommand);
+            listenerThread.Start();
+
+            numberOfNodes = adjacencyList.Count;
+            int[] totalPathLengths = new int[numberOfNodes];
             int[] reachableNodesCount = new int[numberOfNodes];
             object lockObj = new object();
 
+            totalPathLengths = Initialize()?? new int[numberOfNodes];
+
+            int processedNodes = totalPathLengths.Count(x => x != 0);
+
+            Console.WriteLine("Beginning calculations. Press S to save and stop.");
+
             Parallel.For(0, numberOfNodes, startNode =>
             {
-                if (startNode != targetNode)
+                if (startNode != targetNode && !stopping)
                 {
-                    double pathLength = BFS(adjacencyList, startNode, targetNode);
+                    int pathLength = BFS(adjacencyList, startNode, targetNode);
                     lock (lockObj)
                     {
                         if (pathLength != double.MaxValue)
@@ -23,9 +69,22 @@
                         }
                     }
 
-                    // Update progress
-                    int progress = (int)(((double)startNode / numberOfNodes) * 100);
-                    Console.WriteLine($"Progress: {progress}%");
+                    int processed = Interlocked.Increment(ref processedNodes);
+                    if (processed % 1000 == 0)
+                    {
+                        Console.WriteLine($"Progress: {((double)processed / numberOfNodes) * 100:0.00}%");
+                        SaveProgress(totalPathLengths);
+                    }
+
+                    if (stopRequested && !stopping)
+                    {
+                        stopping = true;
+                        Console.WriteLine("Understood, let's stop for now. I, chatGPT, will save your progress to a file now.");
+                        Console.WriteLine("(/) Saving...");
+                        SaveProgress(totalPathLengths);
+                        Console.WriteLine("All done. See you next time.");
+                        return;
+                    }
                 }
             });
 
@@ -40,13 +99,25 @@
             return totalReachableNodes > 0 ? totalPathLength / totalReachableNodes : 0;
         }
 
-        public double BFS(List<List<int>> adjacencyList, int startNode, int targetNode)
+        private void ListenForStopCommand()
+        {
+            while (true)
+            {
+                if (Console.ReadKey().Key == ConsoleKey.S) // For example, press 'S' to save and stop
+                {
+                    stopRequested = true;
+                    break;
+                }
+            }
+        }
+
+        public int BFS(List<List<int>> adjacencyList, int startNode, int targetNode)
         {
             int numberOfNodes = adjacencyList.Count;
-            double[] distances = new double[numberOfNodes];
+            int[] distances = new int[numberOfNodes];
             for (int i = 0; i < numberOfNodes; i++)
             {
-                distances[i] = double.MaxValue;
+                distances[i] = int.MaxValue;
             }
             distances[startNode] = 0;
 
@@ -58,7 +129,7 @@
                 int u = queue.Dequeue();
                 foreach (int v in adjacencyList[u])
                 {
-                    if (distances[v] == double.MaxValue)
+                    if (distances[v] == int.MaxValue)
                     {
                         distances[v] = distances[u] + 1;
                         queue.Enqueue(v);
