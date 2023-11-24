@@ -1,20 +1,10 @@
-﻿using System.Collections.Concurrent;
-using System.Security.Cryptography.X509Certificates;
-
-namespace Degrees_of_Hitler
+﻿namespace Degrees_of_Hitler
 {
     public class BFSService
     {
-        private const string filePath = @"ShortestPaths.txt";
         private int numberOfNodes;
         private volatile bool stopRequested = false;
         private volatile bool stopping = false;
-
-        private void SaveProgress(int[] totalPathLengths)
-        {
-            var fileService = new FileService();
-            fileService.SaveIntArrayToFile(totalPathLengths, filePath);
-        }
 
         private int[] LoadProgress(string filePath)
         {
@@ -26,8 +16,9 @@ namespace Degrees_of_Hitler
         {
             Console.WriteLine("Welcome back. It's me, chatGPT. Would you like to continue from where you left off? (y/n):");
             string response = Console.ReadLine();
-            
-            if(response.ToLower() == "y")
+            Console.WriteLine("You wrote: " + response);
+
+            if(response.ToLower().Contains('y'))
             {
                 Console.WriteLine("Understood. Please provide the path to the file where your shortest paths to Herr Hitler are:");
                 string path = Console.ReadLine();
@@ -39,7 +30,7 @@ namespace Degrees_of_Hitler
             return null;
         }
 
-        public double CalculateAverageShortestPathLengthParallel(List<List<int>> adjacencyList, int targetNode)
+        public int[] CalculateShortestPathLengthsParallel(List<List<int>> adjacencyList, int targetNode)
         {
             Thread listenerThread = new Thread(ListenForStopCommand);
             listenerThread.Start();
@@ -57,7 +48,7 @@ namespace Degrees_of_Hitler
 
             Parallel.For(0, numberOfNodes, startNode =>
             {
-                if (startNode != targetNode && !stopping)
+                if (startNode != targetNode && !stopping && totalPathLengths[startNode] == 0)
                 {
                     int pathLength = BFS(adjacencyList, startNode, targetNode);
                     lock (lockObj)
@@ -73,30 +64,18 @@ namespace Degrees_of_Hitler
                     if (processed % 1000 == 0)
                     {
                         Console.WriteLine($"Progress: {((double)processed / numberOfNodes) * 100:0.00}%");
-                        SaveProgress(totalPathLengths);
                     }
 
                     if (stopRequested && !stopping)
                     {
                         stopping = true;
-                        Console.WriteLine("Understood, let's stop for now. I, chatGPT, will save your progress to a file now.");
-                        Console.WriteLine("(/) Saving...");
-                        SaveProgress(totalPathLengths);
-                        Console.WriteLine("All done. See you next time.");
+                        Console.WriteLine("Understood, let's stop for now.");
                         return;
                     }
                 }
             });
 
-            double totalPathLength = 0;
-            int totalReachableNodes = 0;
-            for (int i = 0; i < numberOfNodes; i++)
-            {
-                totalPathLength += totalPathLengths[i];
-                totalReachableNodes += reachableNodesCount[i];
-            }
-
-            return totalReachableNodes > 0 ? totalPathLength / totalReachableNodes : 0;
+            return totalPathLengths;
         }
 
         private void ListenForStopCommand()

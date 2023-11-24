@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,6 +51,7 @@ namespace Degrees_of_Hitler
             }
 
             object lockObj = new object();
+            int processedNodes = 0;
 
             Parallel.ForEach(edgeList, (edge, state, index) =>
             {
@@ -58,11 +60,11 @@ namespace Degrees_of_Hitler
                     adjacencyList[edge.Item1].Add(edge.Item2);
                 }
 
+                int processed = Interlocked.Increment(ref processedNodes);
                 // Update progress
                 if (index % 1000 == 0) // Update progress for every 1000 operations (adjust as needed)
                 {
-                    int progress = (int)((index / (double)edgeList.Count) * 100);
-                    Console.WriteLine($"Progress: {progress}%");
+                    Console.WriteLine($"Progress: {((double)processed / numberOfNodes) * 100:0.00}%");
                 }
             });
 

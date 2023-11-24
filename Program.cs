@@ -28,6 +28,12 @@ networkAsEdgeList = null;
 
 var bfsService = new BFSService();
 Console.WriteLine("BFS time...");
-var avgShortestPath = bfsService.CalculateAverageShortestPathLengthParallel(network, Adolf);
+var shortestPathsArray = bfsService.CalculateShortestPathLengthsParallel(network, Adolf);
 
-Console.WriteLine($"The average shortest path length to Adolf is: {avgShortestPath}");
+Console.WriteLine("I, chatGPT, will save your progress to a file now.");
+Console.WriteLine("(/) Saving...");
+
+var fileService = new FileService();
+fileService.SaveIntArrayToFile(shortestPathsArray, @"ShortestPaths.txt");
+
+Console.WriteLine("All done. See you next time.");
