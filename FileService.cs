@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -35,6 +36,22 @@ namespace Degrees_of_Hitler
             }
 
             return array;
+        }
+
+        public int[] ReadIntArrayFromFile(string filePath)
+        {
+            List<int> list = new List<int>();
+
+            using (StreamReader file = new StreamReader(filePath))
+            {
+                string line;
+                while ((line = file.ReadLine()) != null)
+                {
+                    list.Add(int.Parse(line));
+                }
+            }
+
+            return list.ToArray();
         }
     }
 }
