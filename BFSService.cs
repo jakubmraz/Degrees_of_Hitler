@@ -118,5 +118,88 @@
 
             return distances[targetNode];
         }
+
+        public List<(int pathLength, List<int> path)> CalculateShortestPathsWithSampling(List<List<int>> adjacencyList, int targetNode, int n_samples)
+        {
+            Thread listenerThread = new Thread(ListenForStopCommand);
+            listenerThread.Start();
+
+            numberOfNodes = adjacencyList.Count;
+            var sampledIndices = GetRandomSampleIndices(numberOfNodes, n_samples);
+            var paths = new List<(int, List<int>)>(n_samples);
+            object lockObj = new object();
+
+            Console.WriteLine("Beginning calculations with sampling. Press S to save and stop.");
+
+            Parallel.ForEach(sampledIndices, startNode =>
+            {
+                if (startNode != targetNode && !stopping)
+                {
+                    var (pathLength, pathNodes) = BFSWithPath(adjacencyList, startNode, targetNode);
+                    lock (lockObj)
+                    {
+                        paths.Add((pathLength, pathNodes));
+                    }
+
+                    if (stopRequested && !stopping)
+                    {
+                        stopping = true;
+                        Console.WriteLine("Understood, let's stop for now.");
+                        return;
+                    }
+                }
+            });
+
+            return paths;
+        }
+
+        private List<int> GetRandomSampleIndices(int totalNodes, int sampleSize)
+        {
+            Random rnd = new Random();
+            return Enumerable.Range(0, totalNodes).OrderBy(x => rnd.Next()).Take(sampleSize).ToList();
+        }
+
+        public (int, List<int>) BFSWithPath(List<List<int>> adjacencyList, int startNode, int targetNode)
+        {
+            int numberOfNodes = adjacencyList.Count;
+            int[] distances = new int[numberOfNodes];
+            int[] predecessors = new int[numberOfNodes];
+            for (int i = 0; i < numberOfNodes; i++)
+            {
+                distances[i] = int.MaxValue;
+                predecessors[i] = -1;
+            }
+            distances[startNode] = 0;
+
+            Queue<int> queue = new Queue<int>();
+            queue.Enqueue(startNode);
+
+            while (queue.Count > 0)
+            {
+                int u = queue.Dequeue();
+                foreach (int v in adjacencyList[u])
+                {
+                    if (distances[v] == int.MaxValue)
+                    {
+                        distances[v] = distances[u] + 1;
+                        predecessors[v] = u;
+                        queue.Enqueue(v);
+                    }
+                }
+            }
+
+            List<int> path = new List<int>();
+            if (distances[targetNode] != int.MaxValue)
+            {
+                int currentNode = targetNode;
+                while (currentNode != -1)
+                {
+                    path.Insert(0, currentNode);
+                    currentNode = predecessors[currentNode];
+                }
+            }
+
+            return (distances[targetNode], path);
+        }
     }
 }

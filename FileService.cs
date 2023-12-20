@@ -53,5 +53,24 @@ namespace Degrees_of_Hitler
 
             return list.ToArray();
         }
+
+        public void SavePathsToFile(List<(int pathLength, List<int> path)> paths, string filePath)
+        {
+            using (StreamWriter file = new StreamWriter(filePath))
+            {
+                foreach (var pathInfo in paths)
+                {
+                    // Constructing the line: pathLength followed by node IDs
+                    string line = pathInfo.pathLength.ToString();
+                    foreach (int node in pathInfo.path)
+                    {
+                        line += " " + node;
+                    }
+
+                    // Writing the line to the file
+                    file.WriteLine(line);
+                }
+            }
+        }
     }
 }
