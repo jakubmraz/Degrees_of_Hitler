@@ -6,31 +6,34 @@ var networkAsEdgeList = EdgeListReader.ReadEdgeListFromFile();
 int numberOfNodes = EdgeListReader.GetNumberOfNodes(networkAsEdgeList);
 var networkAsAdjList = EdgeListReader.ConvertEdgeListToAdjacencyListParallel(networkAsEdgeList, numberOfNodes);
 
-//var degreeDistributionCalculator = new DegreeDistributionCalculator(networkAsEdgeList);
-//var resultolini = degreeDistributionCalculator.CalculateDegreeDistribution();
+FileService fs = new FileService();
+fs.SaveAdjacencyListToFile(networkAsAdjList, "AdjList.txt");
+
+var degreeDistributionCalculator = new DegreeDistributionCalculator(networkAsEdgeList);
+var resultolini = degreeDistributionCalculator.CalculateDegreeDistribution();
 //var averageResultolini = degreeDistributionCalculator.CalculateAverageDegrees(resultolini);
 
 //Console.WriteLine($"{(degreeDistributionCalculator.IsClosedNetwork(resultolini) ? "Closed" : "Open")}");
 //Console.WriteLine($"Avg indegree dist: {averageResultolini.averageInDegree}, avg outdegree dist: {averageResultolini.averageOutDegree}");
 
-//var inDegrees = resultolini.Values.Select(x => x.Item1).ToArray();
-//var outDegrees = resultolini.Values.Select(x => x.Item2).ToArray();
+var inDegrees = resultolini.Values.Select(x => x.Item1).ToArray();
+var outDegrees = resultolini.Values.Select(x => x.Item2).ToArray();
 
-//static int FindPercentileThreshold(int[] degrees, double percentile)
-//{
-//    var sortedDegrees = degrees.OrderBy(x => x).ToArray();
-//    int index = (int)Math.Ceiling(percentile / 100.0 * sortedDegrees.Length) - 1;
-//    return sortedDegrees[index];
-//}
+static int FindPercentileThreshold(int[] degrees, double percentile)
+{
+    var sortedDegrees = degrees.OrderBy(x => x).ToArray();
+    int index = (int)Math.Ceiling(percentile / 100.0 * sortedDegrees.Length) - 1;
+    return sortedDegrees[index];
+}
 
-//// Find the 98th percentile thresholds
-//int inDegreeThreshold = FindPercentileThreshold(inDegrees, 99.9);
-//int outDegreeThreshold = FindPercentileThreshold(outDegrees, 99.9);
+// Find the 98th percentile thresholds
+int inDegreeThreshold = FindPercentileThreshold(inDegrees, 99.9);
+int outDegreeThreshold = FindPercentileThreshold(outDegrees, 99.9);
 
-//// Identify hubs
-//var hubs = resultolini.Where(x => x.Value.Item1 >= inDegreeThreshold && x.Value.Item2 >= outDegreeThreshold)
-//                      .Select(x => x.Key)
-//                      .ToList();
+// Identify hubs
+var hubs = resultolini.Where(x => x.Value.Item1 >= inDegreeThreshold && x.Value.Item2 >= outDegreeThreshold)
+                      .Select(x => x.Key)
+                      .ToList();
 
 //List<int> hubsConnectedToHitler = new List<int>();
 
@@ -126,12 +129,12 @@ networkAsEdgeList = null;
 
 var bfsService = new BFSService();
 Console.WriteLine("BFS time...");
-var shortestPathsArray = bfsService.CalculateShortestPathsWithSampling(networkAsAdjList, Adolf, 10000);
+var shortestPathsArray = bfsService.CalculateShortestPathsWithSamplingAndRemovedSuperhubs(networkAsAdjList, Adolf, 10000, hubs);
 
 Console.WriteLine("I, chatGPT, will save your progress to a file now.");
 Console.WriteLine("(/) Saving...");
 
 var fileService = new FileService();
-fileService.SavePathsToFile(shortestPathsArray, @"ShortestPaths.txt");
+fileService.SavePathsToFile(shortestPathsArray, @"SampledShortestPaths.txt");
 
 Console.WriteLine("All done. See you next time.");

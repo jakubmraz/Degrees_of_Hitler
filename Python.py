@@ -1,43 +1,40 @@
-import numpy as np
-import matplotlib.pyplot as plt
+def calculate_clustering_coefficient(adjacency_list_file):
+    with open(adjacency_list_file, 'r') as file:
+        # Process each line to create a dictionary with node id as key and neighbors as values
+        adjacency_dict = {}
+        for line in file:
+            parts = line.strip().split(':')
+            if len(parts) == 2:
+                node = int(parts[0])
+                neighbors = parts[1].split()
+                adjacency_dict[node] = neighbors
 
-def read_data(file_path):
-    with open(file_path, 'r') as file:
-        data = np.array([int(line.strip()) for line in file])
-    return data
+    # Function to calculate the clustering coefficient of a single node
+    def clustering_coefficient(node, neighbors):
+        if len(neighbors) < 2:
+            return 0  # No edges possible between less than 2 nodes
 
-def five_number_summary(data):
-    minimum = np.min(data)
-    q1 = np.percentile(data, 25)
-    median = np.median(data)
-    q3 = np.percentile(data, 75)
-    maximum = np.max(data)
-    return minimum, q1, median, q3, maximum
+        actual_edges = 0
+        for neighbor in neighbors:
+            # Check for connections between the neighbors
+            neighbor_neighbors = adjacency_dict.get(int(neighbor), [])
+            actual_edges += len([n for n in neighbor_neighbors if n in neighbors])
 
-def plot_distribution(data):
-    plt.figure(figsize=(10, 6))
-    plt.hist(data, bins=100000, color='blue', alpha=0.7)
-    plt.xscale('log')  # Set the x-axis to logarithmic scale
-    plt.title('In-degree Distribution')
-    plt.xlabel('Number of Links (log scale)')
-    plt.ylabel('Frequency')
-    plt.show()
+        possible_edges = len(neighbors) * (len(neighbors) - 1)
+        return actual_edges / possible_edges
 
-def main():
-    file_path = 'InDegrees.txt'  # Replace with your file path
-    data = read_data(file_path)
+    # Calculate clustering coefficient for each node
+    coefficients = []
+    for node, neighbors in adjacency_dict.items():
+        coeff = clustering_coefficient(node, neighbors)
+        coefficients.append(coeff)
 
-    # Five-number summary
-    min_val, q1, median, q3, max_val = five_number_summary(data)
-    print("Five-Number Summary:")
-    print("Minimum:", min_val)
-    print("Q1:", q1)
-    print("Median:", median)
-    print("Q3:", q3)
-    print("Maximum:", max_val)
+    # Average clustering coefficient
+    average_coefficient = sum(coefficients) / len(coefficients)
+    return average_coefficient
 
-    # Plot
-    plot_distribution(data)
+# Replace this with the path to your adjacency list file
+adjacency_list_file_path = 'filtered_adjacency_list.txt'
 
-if __name__ == "__main__":
-    main()
+average_clustering_coefficient = calculate_clustering_coefficient(adjacency_list_file_path)
+print(f"The average clustering coefficient of the network is: {average_clustering_coefficient}")

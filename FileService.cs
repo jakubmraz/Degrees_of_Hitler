@@ -72,5 +72,17 @@ namespace Degrees_of_Hitler
                 }
             }
         }
+
+        public void SaveAdjacencyListToFile(List<List<int>> adjacencyList, string filePath)
+        {
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                foreach (List<int> neighbors in adjacencyList)
+                {
+                    string line = string.Join(" ", neighbors);
+                    writer.WriteLine(line);
+                }
+            }
+        }
     }
 }
