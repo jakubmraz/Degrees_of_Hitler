@@ -176,7 +176,7 @@
             // Remove connections to and from superhub nodes
             foreach (var superhub in superhubNodeIds)
             {
-                if (superhub == 1159788)
+                if (superhub == targetNode)
                     continue;
 
                 modifiedAdjacencyList[superhub].Clear(); // Remove all outbound links from superhub
