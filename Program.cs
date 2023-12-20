@@ -47,7 +47,7 @@ foreach (var hub in hubs)
 }
 
 FileService fs = new FileService();
-fs.SaveIntArrayToFile(hubs.ToArray(), "SuperhubsAdjacentToHitler.txt");
+fs.SaveIntArrayToFile(hubsConnectedToHitler.ToArray(), "SuperhubsAdjacentToHitler.txt");
 
 //var fileservice = new FileService();
 //fileservice.SaveIntArrayToFile(inDegrees, "InDegrees.txt");
