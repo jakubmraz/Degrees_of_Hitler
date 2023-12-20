@@ -25,8 +25,8 @@ static int FindPercentileThreshold(int[] degrees, double percentile)
 }
 
 // Find the 98th percentile thresholds
-int inDegreeThreshold = FindPercentileThreshold(inDegrees, 99);
-int outDegreeThreshold = FindPercentileThreshold(outDegrees, 99);
+int inDegreeThreshold = FindPercentileThreshold(inDegrees, 99.9);
+int outDegreeThreshold = FindPercentileThreshold(outDegrees, 99.99);
 
 // Identify hubs
 var hubs = resultolini.Where(x => x.Value.Item1 >= inDegreeThreshold && x.Value.Item2 >= outDegreeThreshold)
@@ -47,7 +47,7 @@ var hubs = resultolini.Where(x => x.Value.Item1 >= inDegreeThreshold && x.Value.
 //}
 
 FileService fs = new FileService();
-fs.SaveIntArrayToFile(hubs.ToArray(), "Hubs.txt");
+fs.SaveIntArrayToFile(hubs.ToArray(), "Omegahubs.txt");
 
 //var fileservice = new FileService();
 //fileservice.SaveIntArrayToFile(inDegrees, "InDegrees.txt");
