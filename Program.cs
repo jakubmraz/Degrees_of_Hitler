@@ -26,28 +26,28 @@ static int FindPercentileThreshold(int[] degrees, double percentile)
 
 // Find the 98th percentile thresholds
 int inDegreeThreshold = FindPercentileThreshold(inDegrees, 99.9);
-int outDegreeThreshold = FindPercentileThreshold(outDegrees, 99.99);
+int outDegreeThreshold = FindPercentileThreshold(outDegrees, 99.9);
 
 // Identify hubs
 var hubs = resultolini.Where(x => x.Value.Item1 >= inDegreeThreshold && x.Value.Item2 >= outDegreeThreshold)
                       .Select(x => x.Key)
                       .ToList();
 
-//List<int> hubsConnectedToHitler = new List<int>();
+List<int> hubsConnectedToHitler = new List<int>();
 
-//// Check for direct connections to Hitler using the adjacency list and print their IDs
-//foreach (var hub in hubs)
-//{
-//    // Assuming node numbers are 0-indexed and correspond directly to list indices
-//    if (hub < numberOfNodes && networkAsAdjList[hub].Contains(Adolf))
-//    {
-//        Console.WriteLine($"Hub ID {hub} is directly connected to Hitler.");
-//        hubsConnectedToHitler.Add(hub);
-//    }
-//}
+// Check for direct connections to Hitler using the adjacency list and print their IDs
+foreach (var hub in hubs)
+{
+    // Assuming node numbers are 0-indexed and correspond directly to list indices
+    if (hub < numberOfNodes && networkAsAdjList[hub].Contains(Adolf))
+    {
+        Console.WriteLine($"Hub ID {hub} is directly connected to Hitler.");
+        hubsConnectedToHitler.Add(hub);
+    }
+}
 
 FileService fs = new FileService();
-fs.SaveIntArrayToFile(hubs.ToArray(), "Omegahubs.txt");
+fs.SaveIntArrayToFile(hubs.ToArray(), "SuperhubsAdjacentToHitler.txt");
 
 //var fileservice = new FileService();
 //fileservice.SaveIntArrayToFile(inDegrees, "InDegrees.txt");
