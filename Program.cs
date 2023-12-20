@@ -1,8 +1,11 @@
 ﻿using Degrees_of_Hitler;
+using System.ComponentModel.DataAnnotations;
 
 const int Adolf = 1159788;
 
 var networkAsEdgeList = EdgeListReader.ReadEdgeListFromFile();
+int numberOfNodes = EdgeListReader.GetNumberOfNodes(networkAsEdgeList);
+var networkAsAdjList = EdgeListReader.ConvertEdgeListToAdjacencyListParallel(networkAsEdgeList, numberOfNodes);
 
 var degreeDistributionCalculator = new DegreeDistributionCalculator(networkAsEdgeList);
 var resultolini = degreeDistributionCalculator.CalculateDegreeDistribution();
@@ -14,7 +17,7 @@ var averageResultolini = degreeDistributionCalculator.CalculateAverageDegrees(re
 var inDegrees = resultolini.Values.Select(x => x.Item1).ToArray();
 var outDegrees = resultolini.Values.Select(x => x.Item2).ToArray();
 
-static int FindPercentileThreshold(int[] degrees, int percentile)
+static int FindPercentileThreshold(int[] degrees, double percentile)
 {
     var sortedDegrees = degrees.OrderBy(x => x).ToArray();
     int index = (int)Math.Ceiling(percentile / 100.0 * sortedDegrees.Length) - 1;
@@ -22,22 +25,29 @@ static int FindPercentileThreshold(int[] degrees, int percentile)
 }
 
 // Find the 98th percentile thresholds
-int inDegreeThreshold = FindPercentileThreshold(inDegrees, 98);
-int outDegreeThreshold = FindPercentileThreshold(outDegrees, 98);
+int inDegreeThreshold = FindPercentileThreshold(inDegrees, 99.9);
+int outDegreeThreshold = FindPercentileThreshold(outDegrees, 99.9);
 
 // Identify hubs
-var hubs = resultolini.Where(x => x.Value.Item1 >= inDegreeThreshold || x.Value.Item2 >= outDegreeThreshold)
+var hubs = resultolini.Where(x => x.Value.Item1 >= inDegreeThreshold && x.Value.Item2 >= outDegreeThreshold)
                       .Select(x => x.Key)
                       .ToList();
 
-// Check for direct connections to Hitler and print their IDs
-foreach (var hub in hubs)
-{
-    if (networkAsEdgeList.Any(edge => (edge.Item1 == hub && edge.Item2 == Adolf) || (edge.Item1 == Adolf && edge.Item2 == hub)))
-    {
-        Console.WriteLine($"Hub ID {hub} is directly connected to Hitler.");
-    }
-}
+//List<int> hubsConnectedToHitler = new List<int>();
+
+//// Check for direct connections to Hitler using the adjacency list and print their IDs
+//foreach (var hub in hubs)
+//{
+//    // Assuming node numbers are 0-indexed and correspond directly to list indices
+//    if (hub < numberOfNodes && networkAsAdjList[hub].Contains(Adolf))
+//    {
+//        Console.WriteLine($"Hub ID {hub} is directly connected to Hitler.");
+//        hubsConnectedToHitler.Add(hub);
+//    }
+//}
+
+FileService fs = new FileService();
+fs.SaveIntArrayToFile(hubs.ToArray(), "Superhubs.txt");
 
 //var fileservice = new FileService();
 //fileservice.SaveIntArrayToFile(inDegrees, "InDegrees.txt");
