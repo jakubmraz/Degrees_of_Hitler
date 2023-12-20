@@ -161,10 +161,79 @@
             return paths;
         }
 
+        public List<(int pathLength, List<int> path)> CalculateShortestPathsWithSamplingAndRemovedSuperhubs(
+            List<List<int>> adjacencyList,
+            int targetNode,
+            int n_samples,
+            List<int> superhubNodeIds)
+        {
+            Thread listenerThread = new Thread(ListenForStopCommand);
+            listenerThread.Start();
+
+            // Create a copy of the adjacency list to modify
+            var modifiedAdjacencyList = new List<List<int>>(adjacencyList);
+
+            // Remove connections to and from superhub nodes
+            foreach (var superhub in superhubNodeIds)
+            {
+                modifiedAdjacencyList[superhub].Clear(); // Remove all outbound links from superhub
+                for (int i = 0; i < modifiedAdjacencyList.Count; i++)
+                {
+                    modifiedAdjacencyList[i].Remove(superhub); // Remove superhub from other nodes' lists
+                }
+            }
+
+            numberOfNodes = modifiedAdjacencyList.Count;
+            var sampledIndices = GetRandomSampleIndices(numberOfNodes, n_samples, superhubNodeIds);
+            var paths = new List<(int, List<int>)>(n_samples);
+            object lockObj = new object();
+
+            int processedNodes = 0;
+
+            Console.WriteLine("Beginning calculations with sampling and superhubs removed. Press S to save and stop.");
+
+            Parallel.ForEach(sampledIndices, startNode =>
+            {
+                if (startNode != targetNode && !stopping)
+                {
+                    var (pathLength, pathNodes) = BFSWithPath(modifiedAdjacencyList, startNode, targetNode);
+                    lock (lockObj)
+                    {
+                        paths.Add((pathLength, pathNodes));
+                    }
+
+                    int processed = Interlocked.Increment(ref processedNodes);
+                    if (processed % 1000 == 0)
+                    {
+                        Console.WriteLine($"Progress: {((double)processed / n_samples) * 100:0.00}%");
+                    }
+
+                    if (stopRequested && !stopping)
+                    {
+                        stopping = true;
+                        Console.WriteLine("Understood, let's stop for now.");
+                        return;
+                    }
+                }
+            });
+
+            return paths;
+        }
+
         private List<int> GetRandomSampleIndices(int totalNodes, int sampleSize)
         {
             Random rnd = new Random();
             return Enumerable.Range(0, totalNodes).OrderBy(x => rnd.Next()).Take(sampleSize).ToList();
+        }
+
+        private List<int> GetRandomSampleIndices(int totalNodes, int sampleSize, List<int> excludedNodes)
+        {
+            Random rnd = new Random();
+            // Create a range of indices excluding the superhub nodes
+            var range = Enumerable.Range(0, totalNodes).Where(x => !excludedNodes.Contains(x));
+
+            // Randomly order the filtered range and take the specified sample size
+            return range.OrderBy(x => rnd.Next()).Take(sampleSize).ToList();
         }
 
         public (int, List<int>) BFSWithPath(List<List<int>> adjacencyList, int startNode, int targetNode)
