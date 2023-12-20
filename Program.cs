@@ -4,12 +4,47 @@ const int Adolf = 1159788;
 
 var networkAsEdgeList = EdgeListReader.ReadEdgeListFromFile();
 
-//var degreeDistributionCalculator = new DegreeDistributionCalculator(networkAsEdgeList);
-//var resultolini = degreeDistributionCalculator.CalculateDegreeDistribution();
-//var averageResultolini = degreeDistributionCalculator.CalculateAverageDegrees(resultolini);
+var degreeDistributionCalculator = new DegreeDistributionCalculator(networkAsEdgeList);
+var resultolini = degreeDistributionCalculator.CalculateDegreeDistribution();
+var averageResultolini = degreeDistributionCalculator.CalculateAverageDegrees(resultolini);
 
 //Console.WriteLine($"{(degreeDistributionCalculator.IsClosedNetwork(resultolini) ? "Closed" : "Open")}");
 //Console.WriteLine($"Avg indegree dist: {averageResultolini.averageInDegree}, avg outdegree dist: {averageResultolini.averageOutDegree}");
+
+var inDegrees = resultolini.Values.Select(x => x.Item1).ToArray();
+var outDegrees = resultolini.Values.Select(x => x.Item2).ToArray();
+
+static int FindPercentileThreshold(int[] degrees, int percentile)
+{
+    var sortedDegrees = degrees.OrderBy(x => x).ToArray();
+    int index = (int)Math.Ceiling(percentile / 100.0 * sortedDegrees.Length) - 1;
+    return sortedDegrees[index];
+}
+
+// Find the 98th percentile thresholds
+int inDegreeThreshold = FindPercentileThreshold(inDegrees, 98);
+int outDegreeThreshold = FindPercentileThreshold(outDegrees, 98);
+
+// Identify hubs
+var hubs = resultolini.Where(x => x.Value.Item1 >= inDegreeThreshold || x.Value.Item2 >= outDegreeThreshold)
+                      .Select(x => x.Key)
+                      .ToList();
+
+// Check for direct connections to Hitler and print their IDs
+foreach (var hub in hubs)
+{
+    if (networkAsEdgeList.Any(edge => (edge.Item1 == hub && edge.Item2 == Adolf) || (edge.Item1 == Adolf && edge.Item2 == hub)))
+    {
+        Console.WriteLine($"Hub ID {hub} is directly connected to Hitler.");
+    }
+}
+
+//var fileservice = new FileService();
+//fileservice.SaveIntArrayToFile(inDegrees, "InDegrees.txt");
+//fileservice.SaveIntArrayToFile(outDegrees, "OutDegrees.txt");
+
+
+
 //Console.WriteLine($"Indegree distribution of Adi: {resultolini[Adolf].Item1}, outdegree distribution of Adi: {resultolini[Adolf].Item2}");
 
 //static double CalculatePercentile(List<int> degrees, int hitlerDegree)
@@ -73,21 +108,21 @@ var networkAsEdgeList = EdgeListReader.ReadEdgeListFromFile();
 //Console.WriteLine($"Average Clustering Coefficient: {averageCoefficient}");
 //Console.WriteLine($"Clustering coefficient of Hitler: {coefficients[Adolf]}");
 
-int numberOfNodes = EdgeListReader.GetNumberOfNodes(networkAsEdgeList);
-Console.WriteLine("Converting...");
-var network = EdgeListReader.ConvertEdgeListToAdjacencyListParallel(networkAsEdgeList, numberOfNodes);
+//int numberOfNodes = EdgeListReader.GetNumberOfNodes(networkAsEdgeList);
+//Console.WriteLine("Converting...");
+//var network = EdgeListReader.ConvertEdgeListToAdjacencyListParallel(networkAsEdgeList, numberOfNodes);
 
-//To clear up memory
-networkAsEdgeList = null;
+////To clear up memory
+//networkAsEdgeList = null;
 
-var bfsService = new BFSService();
-Console.WriteLine("BFS time...");
-var shortestPathsArray = bfsService.CalculateShortestPathsWithSampling(network, Adolf, 100000);
+//var bfsService = new BFSService();
+//Console.WriteLine("BFS time...");
+//var shortestPathsArray = bfsService.CalculateShortestPathsWithSampling(network, Adolf, 100000);
 
-Console.WriteLine("I, chatGPT, will save your progress to a file now.");
-Console.WriteLine("(/) Saving...");
+//Console.WriteLine("I, chatGPT, will save your progress to a file now.");
+//Console.WriteLine("(/) Saving...");
 
-var fileService = new FileService();
-fileService.SavePathsToFile(shortestPathsArray, @"ShortestPaths.txt");
+//var fileService = new FileService();
+//fileService.SavePathsToFile(shortestPathsArray, @"ShortestPaths.txt");
 
-Console.WriteLine("All done. See you next time.");
+//Console.WriteLine("All done. See you next time.");

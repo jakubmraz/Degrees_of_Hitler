@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 def read_data(file_path):
     with open(file_path, 'r') as file:
-        data = [int(line.strip()) for line in file]
+        data = np.array([int(line.strip()) for line in file])
     return data
 
 def five_number_summary(data):
@@ -16,20 +16,15 @@ def five_number_summary(data):
 
 def plot_distribution(data):
     plt.figure(figsize=(10, 6))
-    counts, bins, patches = plt.hist(data, bins='auto', color='blue', alpha=0.7)
-
-    # Adding count above each bar
-    for count, patch in zip(counts, patches):
-        plt.text(patch.get_x() + patch.get_width() / 2, count + 0.5, str(int(count)), 
-                 ha='center', va='bottom')
-
-    plt.title('Distribution of Shortest Paths to Hitler')
-    plt.xlabel('Number of Links')
+    plt.hist(data, bins=100000, color='blue', alpha=0.7)
+    plt.xscale('log')  # Set the x-axis to logarithmic scale
+    plt.title('In-degree Distribution')
+    plt.xlabel('Number of Links (log scale)')
     plt.ylabel('Frequency')
     plt.show()
 
 def main():
-    file_path = 'ShortestPaths.txt'  # Replace with your file path
+    file_path = 'InDegrees.txt'  # Replace with your file path
     data = read_data(file_path)
 
     # Five-number summary
