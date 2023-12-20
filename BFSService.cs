@@ -129,6 +129,8 @@
             var paths = new List<(int, List<int>)>(n_samples);
             object lockObj = new object();
 
+            int processedNodes = 0;
+
             Console.WriteLine("Beginning calculations with sampling. Press S to save and stop.");
 
             Parallel.ForEach(sampledIndices, startNode =>
@@ -139,6 +141,12 @@
                     lock (lockObj)
                     {
                         paths.Add((pathLength, pathNodes));
+                    }
+
+                    int processed = Interlocked.Increment(ref processedNodes);
+                    if (processed % 1000 == 0)
+                    {
+                        Console.WriteLine($"Progress: {((double)processed / n_samples) * 100:0.00}%");
                     }
 
                     if (stopRequested && !stopping)
